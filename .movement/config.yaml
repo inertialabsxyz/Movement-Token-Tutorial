@@ -7,7 +7,7 @@ profiles:
     account: d829639b72f98216951fd146e7d0e747993b8a6a20d29b57841e0d91f0fb2581
     rest_url: "https://full.testnet.movementinfra.xyz/v1"
     faucet_url: "https://faucet.testnet.movementinfra.xyz/"
-  recipient:
+  alice:
     network: Custom
     private_key: "0xe4ece15ef02a3d6ce6594ea7911684c09dcefee2d2c8f0b6d96c72702b19c0b1"
     public_key: "0x60c424c8de8a4116553a5753bd657747c381bb95c78efcee1a456b70319d3981"
