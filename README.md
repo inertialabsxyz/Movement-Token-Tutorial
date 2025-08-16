@@ -1,45 +1,157 @@
-# Movement Token  Tutorial
+# Movement Token Tutorial
 
-### Setup Movement CLI
+## 🎯 What You'll Learn
 
+This hands-on tutorial will teach you how to:
+- Install and configure the Movement CLI
+- Understand a fungible asset smart contract
+- Build and test Move smart contracts
+- Deploy tokens to Movement's Bardock testnet
+- Interact with your deployed token using CLI commands
+- Deploy to Movement mainnet using environment variables
+
+## 📋 Prerequisites
+
+- Basic command line knowledge
+- Git installed on your system
+- Rust/Cargo installed (for building Movement CLI)
+- A text editor for viewing code
+
+## 🏗️ What We're Building
+
+We'll deploy **FA Coin** - a fungible asset token based on the Aptos fungible asset standard. This token demonstrates:
+- Minting new tokens
+- Transferring tokens between accounts
+- Burning tokens
+- Account freezing/unfreezing capabilities
+
+## ⚠️ Important Notes About This Tutorial
+
+### Included Configuration (Reference Only)
+This tutorial includes a `.movement/config.yaml` file **for demonstration purposes only**. This shows you what a Movement configuration looks like after running `movement init`. 
+
+**DO NOT use this configuration** - you should create your own by running `movement init`.
+
+### Creating Your Own Projects
+When you create your own Movement projects:
+1. Run `movement init` to generate your own unique keys and configuration
+2. Select "Custom" when prompted for network type
+3. Enter the Movement testnet URLs:
+   - REST API: `https://full.testnet.movementinfra.xyz/v1`
+   - Faucet: `https://faucet.testnet.movementinfra.xyz/`
+4. Update `Move.toml` to use Movement's framework:
+   ```toml
+   [dependencies.AptosFramework]
+   git = "https://github.com/movementlabsxyz/aptos-core.git"
+   rev = "movement"
+   subdir = "aptos-move/framework/aptos-framework"
+   ```
+   (Not the standard `aptos-labs` repository)
+
+---
+
+## 📚 Tutorial Sections
+
+### Section 1: Install Movement CLI
+
+#### Option A: Build from source (recommended)
 ```shell
-git clone https://github.com/movementlabsxyz/aptos-core/ && cd aptos-core`
+# Clone the Movement-specific Aptos core repository
+git clone https://github.com/movementlabsxyz/aptos-core/
+cd aptos-core
+
+# Build the Movement CLI
 cargo build -p movement
+
+# Install the CLI globally
 sudo cp target/debug/movement /usr/local/bin/
 ```
 
-`movement --version`
+#### Option B: Download pre-built binaries
+Follow the official installation guide for pre-compiled binaries:
 
-Should give -> 
+📖 **[Movement CLI Quick Install Guide](https://docs.movementnetwork.xyz/devs/movementcli#quick-install-movement-precompiled-binaries)**
 
-Setup development environment
-`movement init`
+This provides platform-specific installation instructions for:
+- macOS x86_64  
+- macOS ARM64 (Apple Silicon)
+- Windows
 
-Select, custom
+For other platforms Option A should be followed.
 
-#### URLs for Bardock
-
-https://full.testnet.movementinfra.xyz/v1
-https://faucet.testnet.movementinfra.xyz/
-
-`.movement/config.yaml`
-
-```yaml
----
-profiles:
-  default:
-    network: Custom
-    private_key: "0xf6208279efe5a3d3b464ca3ccd53d0c7f977135f3f2bfaf6f139ed146d2d8698"
-    public_key: "0x4f79ba761002a999cb6b0d1aa16bf98bdee953f342ad4a44406b0923034d5ea0"
-    account: d829639b72f98216951fd146e7d0e747993b8a6a20d29b57841e0d91f0fb2581
-    rest_url: "https://full.testnet.movementinfra.xyz/v1"
-    faucet_url: "https://faucet.testnet.movementinfra.xyz/"
+#### Verify installation
+```shell
+movement --version
 ```
 
-Confirm we have tokens
+This would be `aptos 3.5.0` or superior.
 
-`movement account balance`
+---
 
+### Section 2: Understanding the Project Structure
+
+#### Project Layout
+```
+tutorial/
+├── .movement/
+│   └── config.yaml       # Pre-configured with testnet keys
+├── move/
+│   ├── Move.toml         # Package configuration
+│   └── sources/
+│       └── basic_token.move  # Our FA Coin contract
+└── README.md             # This file
+```
+
+#### About the Configuration
+
+The included `.movement/config.yaml` file is **for reference only** and shows:
+- What a Movement configuration file looks like
+- The structure with multiple profiles (`default` and `recipient`)
+- Correct network endpoints for Bardock testnet
+
+📝 **Important**: You must create your own configuration by running:
+```shell
+movement init
+```
+
+When prompted:
+1. Choose network type: **Custom**
+2. Enter REST API URL: `https://full.testnet.movementinfra.xyz/v1`
+3. Enter Faucet URL: `https://faucet.testnet.movementinfra.xyz/`
+
+This will generate your own unique keys and account address and fund the account using the Movement Faucet.
+
+Configurations can be named using the `--profile` such as `movement init --profile alice` which would create a new section in `config.yaml` and then can be referenced in future operations using `--profile alice`
+
+---
+
+### Section 3: Build and Test Locally
+
+#### Build the contract
+```shell
+movement move build
+```
+
+This compiles your Move contract and checks for errors.
+
+#### Run tests
+```shell
+movement move test
+```
+
+This executes the test functions in the contract to verify functionality.
+
+---
+
+### Section 4: Deploy to Bardock Testnet
+
+#### Step 1: Check your account balance
+
+```shell
+movement account balance
+```
+
+**Expected output**:
 ```json
 {
   "Result": [
@@ -50,53 +162,60 @@ Confirm we have tokens
     }
   ]
 }
-
 ```
 
-If you need more you can run this
+💡 **Note**: Balance is shown in smallest units (1 MOVE = 100,000,000 units)
 
-`movement account fund-with-faucet`
+#### Step 2: Fund your account (if needed)
+```shell
+movement account fund-with-faucet
+```
 
-Build the contract
+This requests testnet tokens from the faucet.
 
-movement move build
-
-Test the contract
-
-movement move test
-
-Deploy to Bardock(Testnet)
+#### Step 3: Deploy your token contract
+```shell
 movement move publish --named-addresses movement_token_tutorial=d829639b72f98216951fd146e7d0e747993b8a6a20d29b57841e0d91f0fb2581
+```
 
+**What this does**:
+- Publishes your FA Coin contract to the blockchain
+- Uses your account address for the `movement_token_tutorial` named address which is `d829639b72f98216951fd146e7d0e747993b8a6a20d29b57841e0d91f0fb2581` as defined in `config.yaml` for the `Custom` profile.
+- Creates a new fungible asset that you control
+
+**Expected output**:
 ```json
-Transaction submitted: https://explorer.movementlabs.xyz/txn/0x0b0609b4bf67b136e3437c9a8799e5163d657b7c29baf3936912e589e9bc8d38?network=custom
 {
   "Result": {
-    "transaction_hash": "0x0b0609b4bf67b136e3437c9a8799e5163d657b7c29baf3936912e589e9bc8d38",
+    "transaction_hash": "0x...",
     "gas_used": 5068,
     "gas_unit_price": 100,
     "sender": "d829639b72f98216951fd146e7d0e747993b8a6a20d29b57841e0d91f0fb2581",
-    "sequence_number": 0,
     "success": true,
-    "timestamp_us": 1755278058956615,
-    "version": 24091010,
     "vm_status": "Executed successfully"
   }
 }
 ```
 
-The link above is erroneous and should be:
-https://explorer.movementlabs.xyz/txn/0x0b0609b4bf67b136e3437c9a8799e5163d657b7c29baf3936912e589e9bc8d38?network=bardock+testnet
+✅ **Success indicator**: `"success": true` and `"vm_status": "Executed successfully"`
 
-We can see the module deployed with:
+🔍 **View on Explorer**: 
+```
+https://explorer.movementlabs.xyz/txn/{YOUR_TRANSACTION_HASH}?network=bardock+testnet
+```
 
-`movement account list --query modules`
+#### Step 4: Verify deployment
+```shell
+movement account list --query modules
+```
+
+This shows all modules deployed to your account. You should see the `fa_coin` module listed.
 
 ```json
 {
   "Result": [
     {
-      "bytecode": "0xa11ceb0b060000000c0100100210300340b10104f10118058902de0207e704be0508a50a4006e50a7510da0bad010a870d0c0c930db8040dcb11060000010101020103010401050106010700080800020a0000030d07010001020e0b000710070002180600021a0600021c0600021d0800032a0200042c070100000009000100000b020100000c030100000f010400001101050000120601000013000100001407010000150301000016080900061e060b00031f0d0e010801200f0f000321100b01080522111201080223140101080524111201080225160101080226180101080327190b0003280b1a010802291a050108032b1c1d00042d011f0100072e200500052f2101000230222300023122240002322225000333222600021328090002342a01010802352c0901080b0c0d0c0e0c0f13100c11131213140c150c171e1f13201303060c05030003060c05080102060c05010b0201080301080401060c04060c05050303060c0305010801050b020108030b020108030608070b02010808060c0105010803020b02010900050101010301060b0201090002050b02010900010b02010808010808030608070b0201090003050b020108030b02010803060c0b02010808060806030608060b020109000801050b020108030b02010803060c0608060b02010808030608060b02010900010206050a02010b0201090006080908070608090c0805080602060c0a020108090104010b0a010900010a02070608090b0a010408040804020804080401060809010805010807010806010c060b020108030b020108030801060800060c0b020108080206080503060b020108030b020108030b02010808060c0b02010808060806040608060b020109000b0201090003050b020108030b020108030b02010808060c060806030608060b02010900030766615f636f696e056572726f720e66756e6769626c655f6173736574066f626a656374066f7074696f6e167072696d6172795f66756e6769626c655f73746f7265067369676e657206737472696e67144d616e6167656446756e6769626c654173736574046275726e0d46756e6769626c654173736574076465706f7369740e667265657a655f6163636f756e74064f626a656374084d657461646174610c6765745f6d6574616461746106537472696e67086765745f6e616d650b696e69745f6d6f64756c65046d696e74087472616e7366657210756e667265657a655f6163636f756e74087769746864726177086d696e745f726566074d696e745265660c7472616e736665725f7265660b5472616e73666572526566086275726e5f726566074275726e5265660d46756e6769626c6553746f72650a616464726573735f6f660869735f6f776e6572117065726d697373696f6e5f64656e6965640e6f626a6563745f616464726573730d7072696d6172795f73746f7265096275726e5f66726f6d1b656e737572655f7072696d6172795f73746f72655f657869737473106465706f7369745f776974685f7265660f7365745f66726f7a656e5f666c6167156372656174655f6f626a6563745f6164647265737311616464726573735f746f5f6f626a656374046e616d650e436f6e7374727563746f72526566136372656174655f6e616d65645f6f626a656374064f7074696f6e046e6f6e6504757466382b6372656174655f7072696d6172795f73746f72655f656e61626c65645f66756e6769626c655f61737365741167656e65726174655f6d696e745f7265661167656e65726174655f6275726e5f7265661567656e65726174655f7472616e736665725f7265660f67656e65726174655f7369676e6572117472616e736665725f776974685f7265661177697468647261775f776974685f726566d829639b72f98216951fd146e7d0e747993b8a6a20d29b57841e0d91f0fb258100000000000000000000000000000000000000000000000000000000000000010a020807464120436f696e0a0203024641030801000000000000000520d829639b72f98216951fd146e7d0e747993b8a6a20d29b57841e0d91f0fb25810a021f1e687474703a2f2f6578616d706c652e636f6d2f66617669636f6e2e69636f0a021312687474703a2f2f6578616d706c652e636f6d126170746f733a3a6d657461646174615f763198010101000000000000000a454e4f545f4f574e4552344f6e6c792066756e6769626c65206173736574206d65746164617461206f776e65722063616e206d616b65206368616e6765732e01144d616e6167656446756e6769626c654173736574010301183078313a3a6f626a6563743a3a4f626a65637447726f757002086765745f6e616d650101000c6765745f6d657461646174610101000002031708051908061b080700010401000a1d11030c030b000a030c040c070a040b07110a3800040c050f0702110c270e0438012b0010000c050b010b0338020c060b050b060b023803020101000100151d11030c030b000a030c040c050a040b05110a3800040c050f0702110c270e0438012b0010010c070b010b0338040c060b070b060b023805020201040100171d11030c020b000a020c030c040a030b04110a3800040c050f0702110c270e0338012b0010010c050b010b0238040c060b050b0608380602030100000b0707030c000e00070111133807020401000001031103380802050000001b250b00070111160c010e010c030a03380907001118070111183108070411180705111811190a03111a0c050a03111b0c020a03111c0c060b03111d0c040e040b050b060b0212002d00020601040100272211030c030b000a030c040c070a040b07110a3800040c050f0702110c270e0438012b000c060b010b0338040c080a0610020b02111e0c050b0610010b080b053805020701040100292211030c040b000a040c050c070a050b07110a3800040c050f0702110c270e0538012b0010010c090b010a0438020c060b020b0438040c080b090b060b080b03380a020801040100171d11030c020b000a020c030c040a030b04110a3800040c050f0702110c270e0338012b0010010c050b010b0238040c060b050b060938060209010001002b1d11030c030b000a030c040c060a040b06110a3800040c050f0702110c270e0438012b0010010c070b020b0338020c050b070b050b01380b0200020001000000",
+      "bytecode": "...",
       "abi": {
         "address": "0xd829639b72f98216951fd146e7d0e747993b8a6a20d29b57841e0d91f0fb2581",
         "name": "fa_coin",
@@ -248,25 +367,24 @@ We can see the module deployed with:
 
 ```
 
-We can now start calling functions on the contract
+---
 
-`movement move view --function-id 0xd829639b72f98216951fd146e7d0e747993b8a6a20d29b57841e0d91f0fb2581::fa_coin::get_name`
+### Section 5: Interact with Your Token
 
-```json
-{
-  "Result": [
-    "FA Coin"
-  ]
-}
-
+#### Get token name
+```shell
+movement move view --function-id 0xd829639b72f98216951fd146e7d0e747993b8a6a20d29b57841e0d91f0fb2581::fa_coin::get_name
 ```
 
-Mint tokens
+**Expected output**: `["FA Coin"]`
 
-`movement move run --function-id 0xd829639b72f98216951fd146e7d0e747993b8a6a20d29b57841e0d91f0fb2581::fa_coin::mint --args address:d829639b72f98216951fd146e7d0e747993b8a6a20d29b57841e0d91f0fb2581 u64:1000`
+#### Mint your first tokens
 
-Transaction submitted: https://explorer.movementlabs.xyz/txn/0x4f1edab56e5af2449f4a18b589dbed8d9b8d4619b86fdffd95b7ff1aa58dcae5?network=custom
-{
+```shell
+movement move run --function-id 0xd829639b72f98216951fd146e7d0e747993b8a6a20d29b57841e0d91f0fb2581::fa_coin::mint --args address:d829639b72f98216951fd146e7d0e747993b8a6a20d29b57841e0d91f0fb2581 u64:1000
+```
+
+**What this does**: Mints 1000 FA Coin tokens to your account
 ```json
 {
   "Result": {
@@ -283,10 +401,12 @@ Transaction submitted: https://explorer.movementlabs.xyz/txn/0x4f1edab56e5af2449
 }
 ```
 
-The asset is an object with the identifier
+#### Get the token metadata object
+```shell
+movement move view --function-id 0xd829639b72f98216951fd146e7d0e747993b8a6a20d29b57841e0d91f0fb2581::fa_coin::get_metadata
+```
 
-`movement move view --function-id 0xd829639b72f98216951fd146e7d0e747993b8a6a20d29b57841e0d91f0fb2581::fa_coin::get_metadata`
-
+**Expected output**: 
 ```json
 {
   "Result": [
@@ -297,45 +417,103 @@ The asset is an object with the identifier
 }
 ```
 
-You can view the asset on https://explorer.movementlabs.xyz/fungible_asset/0xa511db8a546837226ef3d171f77153d6540abef681600506899d345cffcb091c?network=bardock+testnet
+📝 **Note**: The `inner` value is your token's unique identifier. Save this for checking balances!
 
-To view the balance for the account we have minted the tokens to we can use:
-
-`movement move view --function-id 0x1::primary_fungible_store::balance --args address:d829639b72f98216951fd146e7d0e74movement move view --function-id 0x1::primary_fungible_store::balance --args address:d829639b72f98216951fd146e7d0e747993b8a6a20d29b57841e0d91f0fb2581 address:0xa511db8a546837226ef3d171f77153d6540abef681600506899d345cffcb091c --type-args 0x1::fungible_asset::Metadata`
-
-Create another account under profile 'recipient'
-
-`movement init --profile recipient`
-
-```yaml
-  recipient:
-    network: Custom
-    private_key: "0xe4ece15ef02a3d6ce6594ea7911684c09dcefee2d2c8f0b6d96c72702b19c0b1"
-    public_key: "0x60c424c8de8a4116553a5753bd657747c381bb95c78efcee1a456b70319d3981"
-    account: 67e945e897db25bbea75ed35887162631a0c199214221a14c3e896f6476e94ae
-    rest_url: "https://full.testnet.movementinfra.xyz/v1"
-    faucet_url: "https://faucet.testnet.movementinfra.xyz/"
+🔍 **View on Explorer**:
+```
+https://explorer.movementlabs.xyz/fungible_asset/{YOUR_TOKEN_ID}?network=bardock+testnet
 ```
 
-Transfer 100 to account `67e945e897db25bbea75ed35887162631a0c199214221a14c3e896f6476e94ae`
+#### Check token balance
+```shell
+movement move view --function-id 0x1::primary_fungible_store::balance --args address:d829639b72f98216951fd146e7d0e747993b8a6a20d29b57841e0d91f0fb2581 address:0xa511db8a546837226ef3d171f77153d6540abef681600506899d345cffcb091c --type-args 0x1::fungible_asset::Metadata
+```
 
-`movement move run --function-id 0x1::primary_fungible_store::transfer --args address:0xa511db8a546837226ef3d171f77153d6540abef681600506899d345cffcb091c address:67e945e897db25bbea75ed35887162631a0c199214221a14c3e896f6476e94ae u64:100 --type-args 0x1::fungible_asset::Metadata`
+**Command breakdown**:
+- `0x1::primary_fungible_store::balance` - Framework function to check token balance
+- `address:d829639b72f98216951fd146e7d0e747993b8a6a20d29b57841e0d91f0fb2581` - The account whose balance we're checking (your deployer account)
+- `address:0xa511db8a546837226ef3d171f77153d6540abef681600506899d345cffcb091c` - Your token's metadata object ID (from get_metadata)
+- `--type-args 0x1::fungible_asset::Metadata` - Specifies we're working with fungible asset metadata
 
-We can check the balance for the new account:
+**Expected output**: `["1000"]` (the amount you minted)
 
-` movement move view --function-id 0x1::primary_fungible_store::balance --args address:67e945e897db25bbea75ed35887162631a0c199214221a14c3e896f6476e94ae  address:0xa511db8a546837226ef3d171f77153d6540abef681600506899d345cffcb091c --type-args 0x1::fungible_asset::Metadata`
+💡 **Note**: Replace the addresses with your own:
+- Use your account address from your config.yaml
+- Use your token ID from the get_metadata result
 
-### Movement Mainnet
+#### Transfer tokens to another account
 
-We can now deploy the contract to mainnet with the following:
+To create a recipient account for testing transfers called `alice`:
+```shell
+movement init --profile alice
+```
 
-`movement move publish --url https://full.mainnet.movementinfra.xyz/v1 --named-addresses movement_token_tutorial=$MY_ADDRESS --private-key $MY_PRIVATE_KEY`
+When prompted, use the same network settings as before:
+- Network type: **Custom**
+- REST API: `https://full.testnet.movementinfra.xyz/v1`
+- Faucet: `https://faucet.testnet.movementinfra.xyz/`
 
-You can see the transaction here https://explorer.movementlabs.xyz/txn/0x6196bee28badadb57e885c6f9f25dcc77db3e76650660e36570c0ae5c5f5c54e?network=mainnet
+This will create a second profile in your config.yaml with its own keys and address.
 
-We can view the asset id with
+**Transfer 100 tokens to Alice**:
+```shell
+movement move run --function-id 0x1::primary_fungible_store::transfer --args address:0xa511db8a546837226ef3d171f77153d6540abef681600506899d345cffcb091c address:67e945e897db25bbea75ed35887162631a0c199214221a14c3e896f6476e94ae u64:100 --type-args 0x1::fungible_asset::Metadata
+```
 
-`movement move view --function-id $MY_ADDRESS::fa_coin::get_metadata --url https://full.mainnet.movementinfra.xyz/v1`
+**Command breakdown**:
+- `0x1::primary_fungible_store::transfer` - Framework function for token transfers
+- `address:0xa511db8a546837226ef3d171f77153d6540abef681600506899d345cffcb091c` - Your token's metadata object ID (identifies which token to transfer)
+- `address:67e945e897db25bbea75ed35887162631a0c199214221a14c3e896f6476e94ae` - Alice's account address (recipient)
+- `u64:100` - Amount to transfer (100 tokens)
+- `--type-args 0x1::fungible_asset::Metadata` - Type specification for fungible asset operations
+
+💡 **Note**: This transfers tokens FROM your account (the signer) TO Alice's account. Replace with your actual:
+- Token ID (from get_metadata)
+- Alice's address (from alice profile in config.yaml)
+
+**Verify Alice's balance**:
+```shell
+movement move view --function-id 0x1::primary_fungible_store::balance --args address:67e945e897db25bbea75ed35887162631a0c199214221a14c3e896f6476e94ae address:0xa511db8a546837226ef3d171f77153d6540abef681600506899d345cffcb091c --type-args 0x1::fungible_asset::Metadata
+```
+
+**Command breakdown**:
+- `0x1::primary_fungible_store::balance` - Framework function to check token balance
+- `address:67e945e897db25bbea75ed35887162631a0c199214221a14c3e896f6476e94ae` - Alice's account address (whose balance we're checking)
+- `address:0xa511db8a546837226ef3d171f77153d6540abef681600506899d345cffcb091c` - Your token's metadata object ID (which token to check)
+- `--type-args 0x1::fungible_asset::Metadata` - Type specification for fungible asset operations
+
+**Expected output**: `["100"]` (confirming Alice received the tokens)
+
+💡 **Note**: This is the same balance check command as before, but now checking Alice's account instead of yours. Replace with your actual:
+- Alice's address (from alice profile in config.yaml)
+- Token ID (from get_metadata result)
+
+---
+
+### Section 6: Deploy to Movement Mainnet
+
+⚠️ **Important**: For mainnet deployment, use environment variables to protect your keys!
+
+#### Step 1: Set up environment variables
+```bash
+export MY_ADDRESS="your_mainnet_address"
+export MY_PRIVATE_KEY="your_mainnet_private_key"
+```
+
+#### Step 2: Deploy to mainnet
+```shell
+movement move publish --url https://full.mainnet.movementinfra.xyz/v1 --named-addresses movement_token_tutorial=$MY_ADDRESS --private-key $MY_PRIVATE_KEY
+```
+
+🔍 **View on Mainnet Explorer**:
+```
+https://explorer.movementlabs.xyz/txn/{YOUR_TRANSACTION_HASH}?network=mainnet
+```
+
+#### Step 3: Get your mainnet token ID
+```shell
+movement move view --function-id $MY_ADDRESS::fa_coin::get_metadata --url https://full.mainnet.movementinfra.xyz/v1
+```
 
 ```json
 
@@ -349,20 +527,69 @@ We can view the asset id with
 
 ```
 
-Mint some tokens
-
-`movement move run --function-id $MY_ADDRESS::fa_coin::mint --args address:d829639b72f98216951fd146e7d0e747993b8a6a20d29b57841e0d91f0fb2581 u64:1000 --url https://full.mainnet.movementinfra.xyz/v1 --private-key $MY_PRIVATE_KEY`
-
-and get the balance of them
-
-`movement move view --function-id 0x1::primary_fungible_store::balance --args address:d829639b72f98216951fd146e7d0e747993b8a6a20d29b57841e0d91f0fb2581 address:0xbdfa8e26819b73f5acb4465879255db80bda010dc5d13e28f2c78df7df372f2f --type-args 0x1::fungible_asset::Metadata --url https://full.mainnet.movementinfra.xyz/v1`
-
-```json
-{
-  "Result": [
-    "1000"
-  ]
-}
-
+#### Step 4: Mint tokens on mainnet
+```shell
+movement move run --function-id $MY_ADDRESS::fa_coin::mint --args address:$MY_ADDRESS u64:1000 --url https://full.mainnet.movementinfra.xyz/v1 --private-key $MY_PRIVATE_KEY
 ```
+
+#### Step 5: Check mainnet balance
+```shell
+movement move view --function-id 0x1::primary_fungible_store::balance --args address:$MY_ADDRESS address:{YOUR_TOKEN_ID} --type-args 0x1::fungible_asset::Metadata --url https://full.mainnet.movementinfra.xyz/v1
+```
+
+**Expected output**: `["1000"]`
+
+---
+
+## 🎉 Congratulations!
+
+You've successfully:
+- ✅ Installed the Movement CLI
+- ✅ Built and tested a Move smart contract
+- ✅ Deployed a fungible token to testnet
+- ✅ Minted and transferred tokens
+- ✅ Deployed to mainnet with secure key management
+
+## 📖 Additional Resources
+
+- [Contract Overview](docs/CONTRACT_OVERVIEW.md) - Detailed explanation of the FA Coin contract
+- [Troubleshooting Guide](docs/TROUBLESHOOTING.md) - Common issues and solutions
+- [Advanced Features](docs/ADVANCED.md) - Freeze/unfreeze accounts and more
+- [Movement Documentation](https://docs.movementnetwork.xyz/)
+- [Movement Explorer](https://explorer.movementlabs.xyz/)
+
+## 🛠️ Quick Reference
+
+### Common Commands
+```shell
+# Check balance
+movement account balance
+
+# Fund account
+movement account fund-with-faucet
+
+# Build contract
+movement move build
+
+# Run tests
+movement move test
+
+# Deploy contract
+movement move publish --named-addresses movement_token_tutorial={YOUR_ADDRESS}
+
+# View function (read-only)
+movement move view --function-id {ADDRESS}::{MODULE}::{FUNCTION}
+
+# Run function (state-changing)
+movement move run --function-id {ADDRESS}::{MODULE}::{FUNCTION} --args {ARGUMENTS}
+```
+
+### Contract Functions
+- `get_name()` - Returns token name
+- `get_metadata()` - Returns token metadata object
+- `mint(admin, to, amount)` - Mint new tokens
+- `transfer(admin, from, to, amount)` - Transfer tokens
+- `burn(admin, from, amount)` - Burn tokens
+- `freeze_account(admin, account)` - Freeze an account
+- `unfreeze_account(admin, account)` - Unfreeze an account
 
